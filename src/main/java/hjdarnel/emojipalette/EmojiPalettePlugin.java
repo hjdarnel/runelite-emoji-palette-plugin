@@ -1,19 +1,16 @@
 package hjdarnel.emojipalette;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.imageio.ImageIO;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 @PluginDescriptor(
@@ -22,9 +19,6 @@ import net.runelite.client.ui.NavigationButton;
 public class EmojiPalettePlugin extends Plugin
 {
 	@Inject
-	private Client client;
-
-	@Inject
 	private ClientToolbar clientToolbar;
 
 	private EmojiPanel emojiPanel;
@@ -32,7 +26,7 @@ public class EmojiPalettePlugin extends Plugin
 	private static final Pattern TAG_REGEXP = Pattern.compile("<[^>]*>");
 
 	@Override
-	protected void startUp() throws IOException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException
+	protected void startUp() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException
 	{
 		createEmojiPanel();
 	}
@@ -43,11 +37,11 @@ public class EmojiPalettePlugin extends Plugin
 		clientToolbar.removeNavigation(navButton);
 	}
 
-	private void createEmojiPanel() throws IOException, ClassNotFoundException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException, InvocationTargetException
+	private void createEmojiPanel() throws ClassNotFoundException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException, InvocationTargetException
 	{
 		emojiPanel = injector.getInstance(EmojiPanel.class);
 		emojiPanel.init();
-		final BufferedImage icon = ImageIO.read(new File("icon.png"));
+		final BufferedImage icon = ImageUtil.getResourceStreamFromClass(getClass(), "/icon.png");
 
 		navButton = NavigationButton.builder()
 			.tooltip("Emoji Picker")
