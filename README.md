@@ -6,7 +6,7 @@ Hover over the image to get the trigger text.
 Unfortunately it's not possible to insert the emoji into the chat on-click.
 
 ## Feedback
-Send any issues or feedback [here](https://www.github.com/hjdarnel/runelite-emoji-palette-plugin). Thanks!
+Send any issues or feedback [here](https://www.github.com/hjdarnel/runelite-emoji-palette-plugin/issues/new). Thanks!
 
 ## Example
 ![panel example](panel.png)
