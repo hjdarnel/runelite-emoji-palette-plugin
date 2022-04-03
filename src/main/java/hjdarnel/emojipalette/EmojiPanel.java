@@ -14,18 +14,23 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.PluginErrorPanel;
+import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 class EmojiPanel extends PluginPanel
 {
+	private EmojiPalettePlugin plugin;
 
-	void init() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException, ClassNotFoundException
+
+	void init(EmojiPalettePlugin plugin ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException, ClassNotFoundException
 	{
+		this.plugin = plugin;
+
 		setBorder(new EmptyBorder(10, 10, 10, 10));
 
 		final PluginErrorPanel errorPanel = new PluginErrorPanel();
 		errorPanel.setBorder(new EmptyBorder(10, 25, 10, 25));
-		errorPanel.setContent("Emoji Palette", "Hover over an emoji to view the text trigger");
+		errorPanel.setContent("Emoji Palette", "Click to insert an emoji or hover over to view the text trigger");
 		add(errorPanel, BorderLayout.NORTH);
 
 		JPanel emojiPanel = new JPanel();
@@ -55,8 +60,34 @@ class EmojiPanel extends PluginPanel
 	private JPanel makeEmojiPanel(Enum<?> emoji, Field triggerField, Method loadImageMethod) throws IllegalAccessException, InvocationTargetException
 	{
 		JLabel label = new JLabel();
-		label.setToolTipText(EmojiPalettePlugin.unescapeTags((String) triggerField.get(emoji)));
-		label.setIcon(new ImageIcon((Image) loadImageMethod.invoke(emoji)));
+
+		ImageIcon icon = new ImageIcon((Image) loadImageMethod.invoke(emoji));
+		ImageIcon hoveredIcon = new ImageIcon(ImageUtil.alphaOffset((Image) loadImageMethod.invoke(emoji), -100));
+		String emojiText = EmojiPalettePlugin.unescapeTags((String) triggerField.get(emoji));
+
+		label.setToolTipText(emojiText);
+		label.setIcon(icon);
+		label.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mousePressed(MouseEvent mouseEvent)
+			{
+				plugin.insertEmoji(emojiText);
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent mouseEvent)
+			{
+				label.setIcon(hoveredIcon);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent mouseEvent)
+			{
+				label.setIcon(icon);
+			}
+		});
+
 
 		JPanel emojiPanel = new JPanel();
 		emojiPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
