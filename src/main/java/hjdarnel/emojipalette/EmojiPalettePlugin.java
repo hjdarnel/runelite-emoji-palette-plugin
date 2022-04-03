@@ -8,7 +8,9 @@ import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.ScriptID;
+import net.runelite.api.VarClientInt;
 import net.runelite.api.VarClientStr;
+import net.runelite.api.vars.InputType;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -70,10 +72,18 @@ public class EmojiPalettePlugin extends Plugin
 	{
 		clientThread.invoke(() ->
 		{
-			final String currentMessage = client.getVar(VarClientStr.CHATBOX_TYPED_TEXT);
-			// Pads the emoji text with spaces so always parsed correctly
-			client.setVar(VarClientStr.CHATBOX_TYPED_TEXT, currentMessage + " " + emojiText + " ");
-			client.runScript(ScriptID.CHAT_PROMPT_INIT);
+			if (client.getVar(VarClientInt.INPUT_TYPE) == InputType.PRIVATE_MESSAGE.getType())
+			{
+				final String currentMessage = client.getVar(VarClientStr.INPUT_TEXT);
+				client.setVar(VarClientStr.INPUT_TEXT, currentMessage + " " + emojiText + " ");
+				client.runScript(ScriptID.CHAT_TEXT_INPUT_REBUILD);
+			}
+			else
+			{
+				final String currentMessage = client.getVar(VarClientStr.CHATBOX_TYPED_TEXT);
+				client.setVar(VarClientStr.CHATBOX_TYPED_TEXT, currentMessage + " " + emojiText + " ");
+				client.runScript(ScriptID.CHAT_PROMPT_INIT);
+			}
 		});
 	}
 
