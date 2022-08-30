@@ -29,7 +29,7 @@ class EmojiPanel extends PluginPanel
 		add(errorPanel, BorderLayout.NORTH);
 
 		JPanel emojiPanel = new JPanel();
-		emojiPanel.setLayout(new GridLayout(10, 3));
+		emojiPanel.setLayout(new GridLayout(0, 7));
 		emojiPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		emojiPanel.setBorder(new EmptyBorder(5, 0, 5, 0));
 

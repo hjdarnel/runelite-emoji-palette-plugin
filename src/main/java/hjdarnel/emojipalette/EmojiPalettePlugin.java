@@ -41,7 +41,7 @@ public class EmojiPalettePlugin extends Plugin
 	{
 		emojiPanel = injector.getInstance(EmojiPanel.class);
 		emojiPanel.init();
-		final BufferedImage icon = ImageUtil.getResourceStreamFromClass(getClass(), "/icon.png");
+		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/icon.png");
 
 		navButton = NavigationButton.builder()
 			.tooltip("Emoji Picker")
