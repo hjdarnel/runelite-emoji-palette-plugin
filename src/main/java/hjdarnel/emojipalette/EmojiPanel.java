@@ -2,7 +2,7 @@ package hjdarnel.emojipalette;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.PluginErrorPanel;
+import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 class EmojiPanel extends PluginPanel
@@ -28,41 +29,38 @@ class EmojiPanel extends PluginPanel
 		errorPanel.setContent("Emoji Palette", "Hover over an emoji to view the text trigger");
 		add(errorPanel, BorderLayout.NORTH);
 
-		JPanel emojiPanel = new JPanel();
-		emojiPanel.setLayout(new GridLayout(0, 7));
-		emojiPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		emojiPanel.setBorder(new EmptyBorder(5, 0, 5, 0));
+		JPanel emojiGrid = new JPanel();
+		emojiGrid.setLayout(new GridLayout(0, 7));
+		emojiGrid.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+		emojiGrid.setBorder(new EmptyBorder(5, 0, 5, 0));
 
-		// get Emoji.values(), Emoji.trigger, and Emoji.loadImage() accessible using reflection
-		Class<Enum<?>> emojisClass = (Class<Enum<?>>) getClass().getClassLoader().loadClass("net.runelite.client.plugins.emojis.Emoji");
-		Method valuesMethod = emojisClass.getDeclaredMethod("values");
-		valuesMethod.setAccessible(true);
-		Field triggerField = emojisClass.getDeclaredField("trigger");
+		Class<?> emojiClass = getClass().getClassLoader().loadClass("net.runelite.client.plugins.emojis.Emoji");
+
+		Field triggerField = emojiClass.getDeclaredField("trigger");
 		triggerField.setAccessible(true);
-		Method loadImageMethod = emojisClass.getDeclaredMethod("loadImage");
-		loadImageMethod.setAccessible(true);
 
-		for (final Enum<?> emoji : (Enum<?>[]) valuesMethod.invoke(null))
+		Method valuesMethod = emojiClass.getDeclaredMethod("values");
+		valuesMethod.setAccessible(true);
+
+		Object[] enumConstants = (Object[]) valuesMethod.invoke(null);
+
+		for (Object enumConst : enumConstants)
 		{
-			JPanel panel = makeEmojiPanel(emoji, triggerField, loadImageMethod);
-			emojiPanel.add(panel);
+			String trigger = (String) triggerField.get(enumConst);
+			String path = ((Enum<?>) enumConst).name().toLowerCase() + ".png";
+			BufferedImage img = ImageUtil.loadImageResource(emojiClass, path);
+
+			JPanel oneCell = new JPanel();
+			oneCell.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+			oneCell.setBorder(new EmptyBorder(2, 0, 2, 0));
+
+			JLabel label = new JLabel(new ImageIcon(img));
+			label.setToolTipText(trigger);
+
+			oneCell.add(label);
+			emojiGrid.add(oneCell);
 		}
 
-		add(emojiPanel);
-	}
-
-	// Builds a JPanel displaying an icon with tooltip
-	private JPanel makeEmojiPanel(Enum<?> emoji, Field triggerField, Method loadImageMethod) throws IllegalAccessException, InvocationTargetException
-	{
-		JLabel label = new JLabel();
-		label.setToolTipText(EmojiPalettePlugin.unescapeTags((String) triggerField.get(emoji)));
-		label.setIcon(new ImageIcon((Image) loadImageMethod.invoke(emoji)));
-
-		JPanel emojiPanel = new JPanel();
-		emojiPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		emojiPanel.setBorder(new EmptyBorder(2, 0, 2, 0));
-		emojiPanel.add(label);
-
-		return emojiPanel;
+		add(emojiGrid);
 	}
 }
