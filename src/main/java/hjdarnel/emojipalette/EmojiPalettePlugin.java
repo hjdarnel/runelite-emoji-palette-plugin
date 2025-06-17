@@ -1,7 +1,6 @@
 package hjdarnel.emojipalette;
 
 import java.awt.image.BufferedImage;
-import java.lang.reflect.InvocationTargetException;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.Plugin;
@@ -19,10 +18,8 @@ public class EmojiPalettePlugin extends Plugin
 
 	private NavigationButton navButton;
 
-
-
 	@Override
-	protected void startUp() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException
+	protected void startUp()
 	{
 		createEmojiPanel();
 	}
@@ -33,7 +30,7 @@ public class EmojiPalettePlugin extends Plugin
 		clientToolbar.removeNavigation(navButton);
 	}
 
-	private void createEmojiPanel() throws ClassNotFoundException, NoSuchMethodException, NoSuchFieldException, IllegalAccessException, InvocationTargetException
+	private void createEmojiPanel()
 	{
 		EmojiPanel emojiPanel = injector.getInstance(EmojiPanel.class);
 		emojiPanel.init();

@@ -3,24 +3,28 @@ package hjdarnel.emojipalette;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.io.File;
+import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.RuneLite;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.PluginErrorPanel;
-import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 class EmojiPanel extends PluginPanel
 {
 
-	void init() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, NoSuchFieldException, ClassNotFoundException
+	private static final File EMOJI_DIR = new File(RuneLite.CACHE_DIR, "emojis");
+
+	void init()
 	{
 		setBorder(new EmptyBorder(10, 10, 10, 10));
 
@@ -34,33 +38,54 @@ class EmojiPanel extends PluginPanel
 		emojiGrid.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		emojiGrid.setBorder(new EmptyBorder(5, 0, 5, 0));
 
-		Class<?> emojiClass = getClass().getClassLoader().loadClass("net.runelite.client.plugins.emojis.Emoji");
-
-		Field triggerField = emojiClass.getDeclaredField("trigger");
-		triggerField.setAccessible(true);
-
-		Method valuesMethod = emojiClass.getDeclaredMethod("values");
-		valuesMethod.setAccessible(true);
-
-		Object[] enumConstants = (Object[]) valuesMethod.invoke(null);
-
-		for (Object enumConst : enumConstants)
+		for (Emoji emoji : Emoji.values())
 		{
-			String trigger = (String) triggerField.get(enumConst);
-			String path = ((Enum<?>) enumConst).name().toLowerCase() + ".png";
-			BufferedImage img = ImageUtil.loadImageResource(emojiClass, path);
+			String name = emoji.name();
+			String id = Integer.toHexString(emoji.codepoint);
 
-			JPanel oneCell = new JPanel();
-			oneCell.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-			oneCell.setBorder(new EmptyBorder(2, 0, 2, 0));
+			try
+			{
+				BufferedImage img = loadEmojiFromDisk(emoji.name(), id);
 
-			JLabel label = new JLabel(new ImageIcon(img));
-			label.setToolTipText(trigger);
+				JPanel oneCell = new JPanel();
+				oneCell.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+				oneCell.setBorder(new EmptyBorder(2, 0, 2, 0));
 
-			oneCell.add(label);
-			emojiGrid.add(oneCell);
+				JLabel label = new JLabel(new ImageIcon(img));
+				label.setToolTipText(emoji.trigger);
+
+				oneCell.add(label);
+				emojiGrid.add(oneCell);
+			}
+			catch (IOException e)
+			{
+				log.error("Unable to load emoji {}", name, e);
+			}
 		}
 
 		add(emojiGrid);
+	}
+
+	private BufferedImage loadEmojiFromDisk(String name, String id) throws IOException
+	{
+		try (ZipFile zipFile = new ZipFile(new File(EMOJI_DIR, "assets.zip")))
+		{
+			ZipEntry entry = zipFile.getEntry(id + ".png");
+			if (entry != null)
+			{
+				try (var in = zipFile.getInputStream(entry))
+				{
+					BufferedImage image;
+					synchronized (ImageIO.class)
+					{
+						image = ImageIO.read(in);
+					}
+
+					log.debug("Loaded emoji {}: {}", name, id);
+					return image;
+				}
+			}
+			throw new IOException("file " + id + ".png doesn't exist");
+		}
 	}
 }
